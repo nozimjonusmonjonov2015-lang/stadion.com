@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   stadiums: 'stadionly-stadiums',
   locks: 'stadionly-locks',
   requests: 'stadionly-requests',
+  recurringBookings: 'stadionly-recurring-bookings',
 };
 
 const defaultStadiums = [
@@ -145,6 +146,7 @@ const state = {
   favorites: loadFromStorage(STORAGE_KEYS.favorites, []),
   locks: loadFromStorage(STORAGE_KEYS.locks, {}),
   requests: loadFromStorage(STORAGE_KEYS.requests, defaultRequests),
+  recurringBookings: loadFromStorage(STORAGE_KEYS.recurringBookings, []),
   selectedStadium: null,
   selectedSlot: '',
   bookingTimer: null,
@@ -162,6 +164,7 @@ function initialize() {
   renderRequests();
   renderAdminList();
   bindEvents();
+  renderRecurringBookings();
   renderStadiums();
   initializeMainMap();
   startLockTicker();
@@ -169,6 +172,15 @@ function initialize() {
 
 function bindEvents() {
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('downloadAppBtn')?.addEventListener('click', downloadCurrentPageAsHtml);
+  const recurringToggle = document.getElementById('recurringBookingToggle');
+  const recurringSlotField = document.getElementById('recurringSlotField');
+  if (recurringToggle && recurringSlotField) {
+    recurringToggle.addEventListener('change', () => {
+      recurringSlotField.classList.toggle('visible', recurringToggle.checked);
+    });
+  }
+
   document.getElementById('globalSearch').addEventListener('input', (event) => {
     filters.search = event.target.value.trim().toLowerCase();
     renderStadiums();
@@ -264,6 +276,27 @@ function bindEvents() {
     const phone = document.getElementById('customerPhone').value.trim();
     if (!name || !phone || !state.selectedStadium || !state.selectedSlot) return;
 
+    const recurringEnabled = document.getElementById('recurringBookingToggle').checked;
+    const recurringSlot = document.getElementById('recurringSlotSelect')?.value || state.selectedSlot;
+    const friendCount = Number(document.getElementById('recurringFriendsCount')?.value || 1);
+
+    if (recurringEnabled) {
+      const recurringBooking = {
+        id: `rec-${Date.now()}`,
+        stadiumId: state.selectedStadium.id,
+        stadiumName: state.selectedStadium.name,
+        district: state.selectedStadium.district,
+        slot: recurringSlot,
+        friends: friendCount,
+        day: 'Friday',
+        active: true,
+        createdAt: new Date().toISOString(),
+      };
+      state.recurringBookings.unshift(recurringBooking);
+      saveToStorage(STORAGE_KEYS.recurringBookings, state.recurringBookings);
+      renderRecurringBookings();
+    }
+
     const key = `${state.selectedStadium.id}:${state.selectedSlot}`;
     const lock = state.locks[key];
     if (lock && lock.expiresAt > Date.now()) {
@@ -282,6 +315,10 @@ function bindEvents() {
     state.selectedStadium = null;
     state.selectedSlot = '';
     document.getElementById('bookingForm').reset();
+    const recurringToggle = document.getElementById('recurringBookingToggle');
+    const recurringSlotField = document.getElementById('recurringSlotField');
+    if (recurringToggle) recurringToggle.checked = false;
+    if (recurringSlotField) recurringSlotField.classList.remove('visible');
   });
 
   document.querySelectorAll('[data-close]').forEach((button) => {
@@ -538,21 +575,36 @@ function formatPrice(value) {
   return `${new Intl.NumberFormat('uz-UZ').format(value)} so'm`;
 }
 
+function createReliableTileLayer() {
+  return L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors',
+    crossOrigin: true,
+    noWrap: false,
+  });
+}
+
 function initializeMainMap() {
   if (globalMap) {
     globalMap.remove();
   }
 
-  globalMap = L.map('stadiumMap').setView([41.327, 69.25], 11);
+  globalMap = L.map('stadiumMap', {
+    zoomControl: true,
+    scrollWheelZoom: true,
+  }).setView([41.3111, 69.2797], 11);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap',
-  }).addTo(globalMap);
+  createReliableTileLayer().addTo(globalMap);
 
   state.stadiums.forEach((stadium) => {
-    L.marker(stadium.coords)
-      .addTo(globalMap)
-      .bindPopup(`<b>${stadium.name}</b><br>${stadium.district}<br>${stadium.type}`);
+    const marker = L.marker(stadium.coords).addTo(globalMap);
+    marker.bindPopup(`
+      <div style="min-width: 140px;">
+        <strong>${stadium.name}</strong><br>
+        <span>${stadium.district}</span><br>
+        <span>${stadium.type}</span>
+      </div>
+    `);
   });
 }
 
@@ -565,11 +617,16 @@ function openMapModal(stadium) {
     if (locationMap) {
       locationMap.remove();
     }
-    locationMap = L.map('locationMap').setView(stadium.coords, 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap',
-    }).addTo(locationMap);
-    L.marker(stadium.coords).addTo(locationMap).bindPopup(`<b>${stadium.name}</b><br>${stadium.district}`).openPopup();
+    locationMap = L.map('locationMap', {
+      zoomControl: true,
+      scrollWheelZoom: true,
+    }).setView(stadium.coords, 14);
+
+    createReliableTileLayer().addTo(locationMap);
+    L.marker(stadium.coords)
+      .addTo(locationMap)
+      .bindPopup(`<b>${stadium.name}</b><br>${stadium.district}`)
+      .openPopup();
   }, 100);
 }
 
@@ -606,7 +663,7 @@ function updateLockTimer(secondsLeft) {
       clearInterval(state.bookingTimer);
       state.bookingTimer = null;
     }
-  }, 1000);
+  }, 100);
 }
 
 function getCurrentLockRemaining() {
@@ -627,7 +684,7 @@ function startLockTicker() {
     });
     saveToStorage(STORAGE_KEYS.locks, state.locks);
     renderStadiums();
-  }, 1000);
+  }, 100);
 }
 
 function applyTheme(theme) {
@@ -715,3 +772,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.confetti = confetti;
   }
 });
+
+function downloadCurrentPageAsHtml() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = 'stadionly-page.html';
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('downloadAppBtn').addEventListener('click', downloadCurrentPageAsHtml);

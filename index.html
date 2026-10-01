@@ -119,9 +119,9 @@
                   <i class="fa-solid fa-calendar-check"></i>
                   Hozir bron qiling
                 </button>
-                <button class="secondary-btn">
-                  <i class="fa-solid fa-location-dot"></i>
-                  Yaqin stadionlar
+                <button id="downloadAppBtn" class="secondary-btn" type="button">
+                  <i class="fa-solid fa-download"></i>
+                  Download App
                 </button>
               </div>
 
@@ -259,7 +259,7 @@
           </div>
 
           <div class="map-panel rounded-[30px] overflow-hidden shadow-premium">
-            <div id="stadiumMap" class="w-full h-[420px]"></div>
+            <div id="stadiumMap" class="w-full h-[420px]" aria-label="Stadium map"></div>
           </div>
         </section>
 
@@ -315,6 +315,17 @@
                 E'lonni joylash
               </button>
             </form>
+          </div>
+        </section>
+
+        <section id="recurringBookings" class="mb-10">
+          <div class="section-heading mb-5">
+            <p class="text-xs uppercase tracking-[0.25em] text-emerald-500 font-semibold">Takroriy bronlar</p>
+            <h2 class="text-3xl font-black mt-2">Har juma avtomatik band qilishlar</h2>
+          </div>
+
+          <div class="section-card p-5 md:p-6">
+            <div id="recurringBookingsList" class="space-y-4"></div>
           </div>
         </section>
 
@@ -443,6 +454,27 @@
             <label class="field">
               <span>Izoh</span>
               <textarea id="bookingNotes" rows="3" placeholder="Qo'shimcha ma'lumotlar..."></textarea>
+            </label>
+
+            <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+              <label class="flex items-center justify-between gap-3 cursor-pointer">
+                <span class="font-medium">Har juma kuni avtomatik band qilish</span>
+                <input id="recurringBookingToggle" type="checkbox" class="toggle-checkbox" />
+              </label>
+            </div>
+
+            <label class="field recurring-slot-field" id="recurringSlotField">
+              <span>Takrorlanuvchi vaqt</span>
+              <select id="recurringSlotSelect">
+                <option value="18:00-19:30">18:00 - 19:30</option>
+                <option value="09:45-11:15">09:45 - 11:15</option>
+                <option value="17:30-19:00">17:30 - 19:00</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Dostlar soni</span>
+              <input type="number" id="recurringFriendsCount" value="3" min="1" max="10" />
             </label>
 
             <div class="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">

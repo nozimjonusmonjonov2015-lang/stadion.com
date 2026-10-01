@@ -766,3 +766,113 @@ html.dark .weather-card {
 }
 
 .hidden { display: none !important; }
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, rgba(16, 185, 129, 0.12), rgba(5, 13, 22, 0.96));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.page-loader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #34d399;
+  border-right-color: #22d3ee;
+  box-shadow: 0 0 30px rgba(52, 211, 153, 0.38);
+  animation: spin 1s linear infinite;
+}
+
+.loader-text {
+  margin-top: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.toggle-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
+}
+
+.recurring-slot-field {
+  display: none;
+}
+
+.recurring-slot-field.visible {
+  display: flex;
+}
+
+.recurring-dashboard-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.recurring-dashboard-item strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.recurring-dashboard-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.recurring-dashboard-meta span {
+  border-radius: 999px;
+  padding: 0.32rem 0.6rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.recurring-dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.recurring-dashboard-actions button {
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.recurring-dashboard-actions .cancel-btn {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
